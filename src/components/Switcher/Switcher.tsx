@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import styles from './Swithcer.module.scss';
 
-type SwitcherProps = {
+type TSwitcherProps = {
   label?: string;
   name?: string;
   id?: string;
@@ -10,47 +9,30 @@ type SwitcherProps = {
   onChange?: (e: React.FormEvent) => void;
 };
 
-const Switcher = ({ label, name, options, defaultOption, onChange }: SwitcherProps) => {
-  const [value, setValue] = useState(true);
-
+const Switcher = ({ label, name, options, defaultOption, onChange }: TSwitcherProps) => {
   return (
     <div className="mb-7">
       <label className="block font-medium text-base color-grey mb-2.5">{label}</label>
       <div className="flex align-middle rounded-lg bg-blue80 p-1">
-        <div className="w-1/2 relative">
-          <input
-            type="radio"
-            name={name}
-            id={`${name}-1`}
-            value={options![0]}
-            className={`w-0 h-0 absolute ${styles.input}`}
-            defaultChecked={defaultOption === options![0]}
-            onChange={onChange}
-          />
-          <label
-            htmlFor={`${name}-1`}
-            className="rounded-md text-primColor h-[32px] flex items-center justify-center cursor-pointer"
-          >
-            {options![0]}
-          </label>
-        </div>
-        <div className="w-1/2 relative">
-          <input
-            type="radio"
-            name={name}
-            id={`${name}-2`}
-            value={options![1]}
-            className={`w-0 h-0 absolute ${styles.input}`}
-            defaultChecked={defaultOption === options![1]}
-            onChange={onChange}
-          />
-          <label
-            htmlFor={`${name}-2`}
-            className="rounded-md text-primColor h-[32px] flex items-center justify-center cursor-pointer"
-          >
-            {options![1]}
-          </label>
-        </div>
+        {options?.map((opt) => (
+          <div key={`${name}-${opt}`} className="w-1/2 relative">
+            <input
+              type="radio"
+              name={name}
+              id={`${name}-${opt}`}
+              value={opt}
+              className={`w-0 h-0 absolute ${styles.input}`}
+              defaultChecked={defaultOption === opt}
+              onChange={onChange}
+            />
+            <label
+              htmlFor={`${name}-${opt}`}
+              className="rounded-md text-primColor h-[32px] flex items-center justify-center cursor-pointer"
+            >
+              {opt}
+            </label>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { ReactNode, useCallback, useState } from 'react';
 
-type InputProps = {
+type TInputProps = {
   type?: 'text' | 'email' | 'password' | string;
   label?: string;
   name?: string;
@@ -9,11 +9,22 @@ type InputProps = {
   id?: string;
   suffix?: ReactNode;
   hint?: string;
+  required?: boolean;
   onChange?: (e: React.FormEvent) => void;
   onSuffixClick?: () => void;
 };
 
-const Input = ({ type, name, value, label, suffix, hint, onSuffixClick, onChange }: InputProps) => {
+const Input = ({
+  type,
+  name,
+  value,
+  label,
+  suffix,
+  hint,
+  required,
+  onSuffixClick,
+  onChange,
+}: TInputProps) => {
   const eyeOn = '/icon-eye.svg';
   const eyeOff = '/icon-eye-off.svg';
 
@@ -31,6 +42,7 @@ const Input = ({ type, name, value, label, suffix, hint, onSuffixClick, onChange
           type={type === 'password' ? (passwordVisibile ? 'text' : 'password') : type}
           name={name}
           value={value}
+          required={required}
           className="block w-full h-[40px] border border-grey60 rounded-lg focus:outline-0 focus:shadow-input py-3 px-2 text-primColor"
           onChange={onChange}
         />
