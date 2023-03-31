@@ -8,7 +8,7 @@ type TInputProps = {
   value?: string;
   id?: string;
   suffix?: ReactNode;
-  hint?: string;
+  hint?: string | ReactNode;
   required?: boolean;
   onChange?: (e: React.FormEvent) => void;
   onSuffixClick?: () => void;
@@ -61,7 +61,7 @@ const Input = ({
           )}
         </div>
       </div>
-      {hint && <div className="text-sm text-grey80 mt-2.5">{hint}</div>}
+      {hint && hint}
     </div>
   );
 };

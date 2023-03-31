@@ -14,6 +14,7 @@ module.exports = {
         grey: '#475569',
         grey80: '#94A3B8',
         grey60: '#E2E8F0',
+        danger: '#F87171',
       },
       padding: {
         primary: '40px',

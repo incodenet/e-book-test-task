@@ -6,6 +6,7 @@ type TSwitcherProps = {
   id?: string;
   options?: string[];
   defaultOption?: string | number;
+  value?: string | number;
   onChange?: (e: React.FormEvent) => void;
 };
 

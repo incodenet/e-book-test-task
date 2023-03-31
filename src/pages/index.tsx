@@ -4,76 +4,102 @@ import Head from 'next/head';
 import Input from '../components/Input/Input';
 import Button from '../components/Button/Button';
 import Switcher from '../components/Switcher/Switcher';
-import Image from 'next/image';
-import Jdenticon from 'react-jdenticon';
-import { useCallback, useContext, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useContext, useMemo, useState } from 'react';
 import { ICustomer } from '../interfaces';
 import { CustomerContext } from '../context/customer';
 import { TCustomerContextType } from '../types';
+import CustomerRow from '../components/CustomerRow/CustomerRow';
+import { statusOptions } from '../constants/form-options';
+import { ActionTranslationsEnum } from '../enums/action-translations-enum';
 
 const Home: NextPage = () => {
   const { customers, addCustomer, updateCustomer, deleteCustomer } = useContext(
     CustomerContext,
   ) as TCustomerContextType;
 
-  const initialValues = {
-    firstName: '',
-    lastName: '',
-    company: '',
-    status: 'User',
-    email: '',
-    password: '',
-  };
+  const initialValues = useMemo(
+    () => ({
+      firstName: '',
+      lastName: '',
+      company: '',
+      status: statusOptions[0],
+      email: '',
+      password: '',
+    }),
+    [],
+  );
 
   const [form, setForm] = useState<Omit<ICustomer, 'id'>>(initialValues);
   const [currentCustomerId, setCurrentCustomerId] = useState<string>('');
   const [editMode, setEditMode] = useState<boolean>(false);
   const [disableSubmit, setDisableSubmit] = useState<boolean>(true);
+  const [passwordLengthWarning, setPasswordLengthWarning] = useState<boolean>(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
 
-    if (editMode) {
-      updateCustomer(currentCustomerId, form);
-    } else {
-      addCustomer(form);
-    }
+      if (editMode) {
+        updateCustomer(currentCustomerId, form);
+      } else {
+        addCustomer(form);
+      }
 
-    setForm(initialValues);
-    setEditMode(false);
-    setDisableSubmit(true);
-  };
+      setForm(initialValues);
+      setEditMode(false);
+      setDisableSubmit(true);
+    },
+    [form, editMode, currentCustomerId, initialValues, addCustomer, updateCustomer],
+  );
 
   const handleEdit = useCallback(
     (id: string) => {
       const item = customers.find((item) => item.id === id);
 
-      console.log(id, customers);
-
       setEditMode(true);
       setCurrentCustomerId(id);
+
       setForm(item!);
     },
     [customers],
   );
 
-  const handleDelete = useCallback((id: string) => {
-    deleteCustomer(id);
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteCustomer(id);
+    },
+    [deleteCustomer],
+  );
+
+  const validatePasswordField = useCallback((e: FormEvent, fieldName: string) => {
+    if (
+      (e.target as HTMLInputElement).name === fieldName &&
+      (e.target as HTMLInputElement).value.length < 8
+    ) {
+      setPasswordLengthWarning(true);
+    } else {
+      setPasswordLengthWarning(false);
+    }
   }, []);
 
-  const handleChange = useCallback((e: React.FormEvent) => {
-    setDisableSubmit(false);
+  const handleChange = useCallback(
+    (e: React.FormEvent) => {
+      setDisableSubmit(false);
 
-    setForm((prev) => ({
-      ...prev,
-      [(e.target as HTMLInputElement).name]: (e.target as HTMLInputElement).value,
-    }));
-  }, []);
+      validatePasswordField(e, 'password');
+
+      setForm((prev) => ({
+        ...prev,
+        [(e.target as HTMLInputElement).name]: (e.target as HTMLInputElement).value,
+      }));
+    },
+    [validatePasswordField],
+  );
 
   const handleCancelEdit = useCallback(() => {
     setEditMode(false);
     setForm(initialValues);
-  }, []);
+  }, [initialValues]);
 
   return (
     <>
@@ -82,7 +108,9 @@ const Home: NextPage = () => {
       </Head>
       <div className="flex h-full">
         <div className="xl:w-[512px] lg:w-[400px] md:w-[350px] p-primary border-r-2 border-grey60 h-full">
-          <h2 className="font-bold text-xl mb-9">{`${editMode ? 'Edit' : 'Add'}`} Customer</h2>
+          <h2 className="font-bold text-xl mb-9">
+            {`${editMode ? ActionTranslationsEnum.EDIT : ActionTranslationsEnum.ADD}`} Customer
+          </h2>
           <form onSubmit={handleSubmit}>
             <div className="xl:flex gap-6">
               <Input
@@ -112,8 +140,8 @@ const Home: NextPage = () => {
             <Switcher
               label="Status"
               name="status"
-              options={['User', 'Administrator']}
-              defaultOption={form?.status || 'User'}
+              options={statusOptions}
+              defaultOption={form?.status}
               onChange={(e) => handleChange(e)}
             />
             <Input
@@ -130,21 +158,29 @@ const Home: NextPage = () => {
               value={form?.password || ''}
               label="Password"
               required
-              hint="8+ characters"
+              hint={
+                <div
+                  className={`text-sm mt-2.5 ${
+                    passwordLengthWarning ? 'text-danger' : 'text-grey80'
+                  }`}
+                >
+                  8+ characters
+                </div>
+              }
               onChange={(e) => handleChange(e)}
             />
             <div className="xl:flex gap-6">
               <div className="flex-1">
                 <Button
                   type="submit"
-                  text={editMode ? 'Apply' : 'Save'}
+                  text={editMode ? ActionTranslationsEnum.APPLY : ActionTranslationsEnum.SAVE}
                   theme="primary"
-                  disabled={disableSubmit}
+                  disabled={disableSubmit || passwordLengthWarning}
                 />
               </div>
               {editMode && (
                 <div className="w-1/2" onClick={() => handleCancelEdit()}>
-                  <Button type="button" text="Cancel" theme="secondary" />
+                  <Button type="button" text={ActionTranslationsEnum.CANCEL} theme="secondary" />
                 </div>
               )}
             </div>
@@ -167,41 +203,13 @@ const Home: NextPage = () => {
               </thead>
               <tbody>
                 {customers.map((item: ICustomer) => (
-                  <tr key={item.id}>
-                    <td>
-                      <div className="flex gap-2 items-center">
-                        <div className="w-[32px] h-[32px] p-1 bg-blue60 rounded-lg">
-                          <Jdenticon size="24" value={item.email || item.firstName} />
-                        </div>
-                        <div className="font-medium text-primColor">
-                          {item.firstName} {item.lastName}
-                        </div>
-                      </div>
-                    </td>
-                    <td>{item.company}</td>
-                    <td>{item.email}</td>
-                    <td>
-                      <div
-                        className={`w-[49px] h-[24px] rounded relative top-[-2px] ${
-                          item.status === 'User' ? 'bg-grey60' : 'bg-blue'
-                        }`}
-                      ></div>
-                    </td>
-                    <td>
-                      <div className="flex gap-4">
-                        <button className="cursor-pointer" onClick={() => handleEdit(item.id!)}>
-                          <Image src="/icon-edit.svg" alt="Edit" width={24} height={24} />
-                        </button>
-                        <button
-                          className="cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                          disabled={editMode}
-                          onClick={() => handleDelete(item.id!)}
-                        >
-                          <Image src="/icon-trash.svg" alt="Delete" width={24} height={24} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                  <CustomerRow
+                    key={item.id}
+                    entity={item}
+                    disableDelete={editMode}
+                    handleEdit={() => handleEdit(item.id!)}
+                    handleDelete={() => handleDelete(item.id!)}
+                  />
                 ))}
               </tbody>
             </table>

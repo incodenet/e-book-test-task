@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ICustomer } from '../interfaces';
 import { TCustomerContextType } from '../types';
@@ -14,14 +14,10 @@ const CustomerContextProvider: React.PropsWithChildren<any> = ({
 
   useEffect(() => {
     localStorage.setItem('customers', JSON.stringify(customers));
-
-    console.log('state intialized ');
   }, [customers]);
 
   useEffect(() => {
     const customerFromStorage = localStorage.getItem('customers');
-
-    console.log('state updated | intialized');
 
     setCustomers(JSON.parse(customerFromStorage!));
   }, []);
@@ -30,15 +26,19 @@ const CustomerContextProvider: React.PropsWithChildren<any> = ({
     setCustomers((prev) => [...prev, { id: uuidv4(), ...data }]);
   };
 
-  const updateCustomer = (id: string, updatedEmployeeData: ICustomer) => {
-    setCustomers(
-      customers.map((employee) => (employee.id === id ? updatedEmployeeData : employee)),
-    );
-  };
+  const updateCustomer = useCallback(
+    (id: string, updatedEmployeeData: ICustomer) => {
+      setCustomers(customers.map((c) => (c.id === id ? updatedEmployeeData : c)));
+    },
+    [customers],
+  );
 
-  const deleteCustomer = (id: string) => {
-    setCustomers(customers.filter((employee) => employee.id !== id));
-  };
+  const deleteCustomer = useCallback(
+    (id: string) => {
+      setCustomers(customers.filter((c) => c.id !== id));
+    },
+    [customers],
+  );
 
   return (
     <CustomerContext.Provider value={{ customers, addCustomer, updateCustomer, deleteCustomer }}>
